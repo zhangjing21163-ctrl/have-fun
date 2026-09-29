@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+                <style></style>
+            <style>
+      html, body { height: 100%; margin: 0; padding: 0; background: #000; overflow: hidden; }
+      #globe-container { width: 100%; height: 100%; }
+    </style><script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script><script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script><style>
+      #gl-infoBox{display:none;position:absolute;top:20px;left:20px;width:320px;max-height:calc(100vh - 40px);background:rgba(25,25,25,0.85);color:white;border:1px solid #444;border-radius:12px;padding:20px;box-shadow:0 8px 24px rgba(0,0,0,0.7);overflow-y:auto;z-index:100;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;transition:all 0.3s ease;}
+      #gl-infoBox img{width:100%;height:auto;border-radius:8px;margin-bottom:15px;border:1px solid #555;}
+      #gl-infoBox h3{margin-top:0;margin-bottom:15px;color:#ffb700;font-size:1.4em;}
+      #gl-infoBox h4{margin-top:20px;margin-bottom:5px;color:#888;border-bottom:1px solid #444;padding-bottom:5px;font-size:0.9em;text-transform:uppercase;letter-spacing:0.5px;}
+      #gl-infoBox p{margin-top:0;line-height:1.6;color:#ccc;}
+      #gl-closeButton, #gl-resetButton{position:absolute;width:30px;height:30px;background:rgba(0,0,0,0.5);color:white;border:1px solid #777;border-radius:50%;text-align:center;cursor:pointer;font-weight:700;font-size:16px;user-select:none;z-index:101;transition:all 0.2s ease;}
+      #gl-closeButton{top:15px;right:15px;line-height:28px;}
+      #gl-resetButton{top:20px; right: 20px; line-height:30px; font-size:18px;}
+      #gl-closeButton:hover, #gl-resetButton:hover{background:#ffb700;color:#000;transform:scale(1.1);}
+      #gl-title{position:absolute;top:20px;left:50%;transform:translateX(-50%);color:#fff;font-size:1.5em;font-weight:300;text-shadow:0 0 10px rgba(0,0,0,0.8);z-index:50;pointer-events:none;text-align:center;}
+      #gl-developer{position:absolute;bottom:15px;right:15px;font-size:0.8em;color:#aaa;z-index:50;}
+      @media (max-width: 500px) {
+        #gl-infoBox { width: calc(100% - 40px); left: 50%; top: auto; bottom: 20px; transform: translateX(-50%); max-height: 45vh; }
+        #gl-title { font-size: 1.1em; width: 90%; }
+        #gl-resetButton { top: auto; bottom: 20px; }
+        #gl-developer { font-size: 0.7em; bottom: 5px; right: 5px; }
+      }</style></head>
+            <body style="cursor: default;">
+                <script>(function installLiveweaveConsoleBridge() {
+        if (window.__liveweaveConsoleBridge) return;
+        window.__liveweaveConsoleBridge = true;
+
+        function format(value) {
+            if (typeof value === 'string') return value;
+            if (typeof value === 'undefined') return 'undefined';
+            if (typeof value === 'function') return value.toString();
+            if (value instanceof Error) return value.name + ': ' + value.message;
+            if (value instanceof Element) return value.outerHTML;
+            try {
+                var seen = [];
+                return JSON.stringify(value, function(key, item) {
+                    if (typeof item === 'object' && item !== null) {
+                        if (seen.indexOf(item) !== -1) return '[Circular]';
+                        seen.push(item);
+                    }
+                    return item;
+                }, 2);
+            } catch (err) {
+                return String(value);
+            }
+        }
+
+        function send(type, values, id) {
+            parent.postMessage({
+                source: 'liveweave-preview-console',
+                type: type,
+                id: id || '',
+                values: (values || []).map(format)
+            }, '*');
+        }
+
+        ['log', 'info', 'warn', 'error', 'debug'].forEach(function(level) {
+            var original = console[level];
+            console[level] = function() {
+                var args = Array.prototype.slice.call(arguments);
+                send(level === 'log' || level === 'debug' ? 'log' : level, args);
+                if (original) original.apply(console, args);
+            };
+        });
+
+        window.addEventListener('error', function(event) {
+            send('error', [event.message + (event.lineno ? ' (line ' + event.lineno + ')' : '')]);
+        });
+        window.addEventListener('unhandledrejection', function(event) {
+            send('error', ['Unhandled promise rejection:', event.reason]);
+        });
+        window.addEventListener('message', function(event) {
+            var message = event.data || {};
+            if (event.source !== parent || message.source !== 'liveweave-parent-console' || message.type !== 'evaluate') return;
+            try {
+                var result = (0, eval)(message.code);
+                Promise.resolve(result).then(function(value) {
+                    send('result', [value], message.id);
+                }, function(error) {
+                    send('error', [error], message.id);
+                });
+            } catch (error) {
+                send('error', [error], message.id);
+            }
+        });
+        send('ready', []);
+    })();</script>
+                <script>(function installPreviewLinkGuard() {
+        var noticeTimer;
+
+        function showNotice(message) {
+            var notice = document.getElementById('lw-preview-link-notice');
+            if (!notice) {
+                notice = document.createElement('div');
+                notice.id = 'lw-preview-link-notice';
+                notice.setAttribute('role', 'status');
+                notice.style.cssText = 'position:fixed;left:12px;bottom:12px;z-index:2147483647;max-width:calc(100% - 24px);padding:10px 14px;border-radius:9px;background:#17212d;color:#fff;font:13px/1.4 system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.25);pointer-events:none;';
+                document.body.appendChild(notice);
+            }
+            notice.textContent = message;
+            notice.hidden = false;
+            clearTimeout(noticeTimer);
+            noticeTimer = setTimeout(function() { notice.hidden = true; }, 3500);
+        }
+
+        document.addEventListener('click', function(event) {
+            var link = event.target.closest && event.target.closest('a[href]');
+            if (!link || event.defaultPrevented) return;
+
+            var href = (link.getAttribute('href') || '').trim();
+            if (href.charAt(0) === '#') {
+                event.preventDefault();
+                var fragment = href.slice(1);
+                if (!fragment) {
+                    window.scrollTo(0, 0);
+                    return;
+                }
+                try { fragment = decodeURIComponent(fragment); } catch (error) {}
+                var target = document.getElementById(fragment) || document.getElementsByName(fragment)[0];
+                if (target) target.scrollIntoView();
+                return;
+            }
+
+            if (/^(https?:)?\/\//i.test(href)) {
+                event.preventDefault();
+                window.open(href, '_blank', 'noopener,noreferrer');
+                return;
+            }
+
+            if (/^(mailto:|tel:)/i.test(href)) return;
+
+            event.preventDefault();
+            showNotice('This page cannot be opened in the preview.');
+        }, true);
+    })();</script>
+                
+    
+    <center><h1 style="color:yellow;">互動旅遊景點推薦平台<br>Developer: ZHANG JING</h1></center>    
+ 
+    <div id="globe-container" style="width: 100%; height: 100%;"><canvas width="2198" height="842" style="display: block; width: 1099px; height: 421px;"></canvas></div>
+    <script src="https://cdn.jsdelivr.net/gh/digimarketingai/EZ-Globe.js/globe-bundle.js" defer=""></script>
+    
+    <script>
+        const DEMO_SPOTS = [
+            {
+                "name": "Giza Pyramid Complex",
+                "lat": 29.9772,
+                "lon": 31.1299,
+                "desc_en": "The Giza pyramid complex (also called the Giza necropolis) in Egypt is home to the Great Pyramid, the pyramid of Khafre, and the pyramid of Menkaure.",
+                "desc_zh": "位於埃及的吉薩金字塔群（亦稱吉薩墓地）內，坐落著大金字塔、卡夫拉金字塔以及孟卡拉金字塔。",
+                "image_url": "https://upload.wikimedia.org/wikipedia/commons/9/96/Pyramids_of_the_Giza_Necropolis.jpg"
+            },
+            {
+                "name": "Great Wall",
+                "lat": 40.4107332,
+                "lon": 115.9648371,
+                "desc_en": "This is a goooooood place~~~~",
+                "desc_zh": "這是好地方～",
+                "image_url": "https://upload.wikimedia.org/wikipedia/commons/2/23/The_Great_Wall_of_China_at_Jinshanling-edit.jpg"
+            },
+            {
+                "name": "Victoria Harbour",
+                "lat": 22.30752,
+                "lon": 114.126510,
+                "desc_en": "Victoria Harbour is a natural landform harbour in Hong Kong separating Hong Kong Island in the south from the Kowloon Peninsula to the north. ",
+                "desc_zh": "維多利亞港是香港的一個天然地貌港灣，將南邊的香港島與北邊的九龍半島分隔開來。",
+                "image_url": "https://upload.wikimedia.org/wikipedia/commons/c/c4/Hong_Kong_Victoria_Harbour_Pano_View_from_ICC_201105.jpg"
+
+            },
+            {
+                "name": "Wong Tai Sin Temple",
+                "lat": 22.3524933,
+                "lon": 114.1668213,
+                "desc_en": "Wong Tai Sin Temple (English: Wong Tai Sin Temple), officially known as the Chik Sung Wong Tai Sin Temple or the Sik Sik Yuen Wong Tai Sin Temple, is a historic temple in Hong Kong located in Wong Tai Sin, East Kowloon. It covers an area of approximately 18,000 square meters and is managed by the non-profit religious and charitable organization Sik Sik Yuen. The temple primarily enshrines Wong Chup-ping, a renowned deity of Southern Chinese Taoism from the Eastern Jin Dynasty. It also enshrines deities from Confucianism and Buddhism, such as Confucius and Guanyin. This fusion of the three traditions is a distinctive feature of the Wong Tai Sin Temple in Hong Kong. The building is currently listed as a Grade I historic building in Hong Kong.",
+                "desc_zh": "黄大仙Wong Tai Sin Temple 全称赤松黄大仙祠或啬色园黄大仙祠，是香港一座历史悠久的庙宇，位于九龙东黄大仙，占地约18,000平方米，由非牟利宗教慈善团体啬色园管理。庙宇主要供奉东晋时南中国道教著名神祇黄初平，另亦有供奉儒、佛两教的神祇如孔子、观音等，三教融合为香港黄大仙祠一项特色。该建筑现列作香港一级历史建筑。",
+                "image_url": "https://upload.wikimedia.org/wikipedia/commons/2/2e/HK_WongTaiSinTemple.JPG"
+            },  
+        ]
+    </script>    
+    
+ 
+                <script></script>
+            
+        
+    
+      <div id="gl-ui-container">
+        <div id="gl-infoBox" style="display: block;">
+          <div id="gl-closeButton">×</div>
+          <h3 id="gl-infoName">Victoria Harbour</h3>
+          <img id="gl-infoImage" src="https://upload.wikimedia.org/wikipedia/commons/c/c4/Hong_Kong_Victoria_Harbour_Pano_View_from_ICC_201105.jpg" alt="Location Image">
+          <h4>Description</h4>
+          <p id="gl-infoDescEn">Victoria Harbour is a natural landform harbour in Hong Kong separating Hong Kong Island in the south from the Kowloon Peninsula to the north. </p>
+          <h4>介绍</h4>
+          <p id="gl-infoDescZh">維多利亞港是香港的一個天然地貌港灣，將南邊的香港島與北邊的九龍半島分隔開來。</p>
+        </div>
+        <div id="gl-resetButton">⟲</div>
+        
+        
+      </div>
+    </body>
